@@ -1,0 +1,73 @@
+# This is a basic workflow to help you get started with Actions
+
+name: CI
+
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on push or pull request events but only for the "main" branch
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  build:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v3
+
+      # Runs a single command using the runners shell
+      - name: Run a one-line script
+        run: echo Hello, world!
+
+      # Runs a set of commands using the runners shell
+      - name: Run a multi-line script
+        run: |
+          echo Add other actions to build,
+          echo test, and deploy your project.
+
+      - name: Install base develop env
+        run: |
+          sudo apt update
+          sudo apt install -y sbuild buildd qemu-system-misc qemu-user-static binfmt-support \
+                         ca-certificates apt-transport-https devscripts mmdebstrap eatmydata git
+
+      - name: debian-ports fix
+        run: |
+          wget https://mirror.sjtu.edu.cn/debian/pool/main/d/debian-ports-archive-keyring/debian-ports-archive-keyring_2023.02.01_all.deb
+          sudo dpkg -i ./debian-ports-archive-keyring_2023.02.01_all.deb
+      - name: install xthead qemu
+        run: |
+          git clone https://github.com/revyos/qemu --depth=1 && cd qemu
+          ./configure \
+            --prefix=$HOME/qemu-install \
+            --static \
+                --target-list=riscv64-linux-user \
+                --disable-system \
+                --disable-pie \
+                --interp-prefix=/etc/qemu-binfmt/%M
+          make -j20
+          make install
+          sudo cp -fv $HOME/qemu-install/bin/qemu-riscv64 /usr/bin/qemu-riscv64-static
+          sudo dpkg-reconfigure binfmt-support
+
+      - name: build chroot
+        run: |
+          sudo mkdir -p /srv/chroot
+          sudo sbuild-createchroot --debootstrap=debootstrap --arch=riscv64 \
+            --chroot-suffix=-revyos-sbuild \
+            --no-deb-src \
+            --include=debian-ports-archive-keyring,ca-certificates,apt-transport-https,eatmydata \
+            --extra-repository="deb [trusted=yes] https://mirror.iscas.ac.cn/revyos/revyos-addons revyos-addons main" \
+            sid /srv/chroot/sid-riscv64-revyos-sbuild \
+            https://mirror.iscas.ac.cn/revyos/revyos-base
+          
