@@ -39,7 +39,7 @@ jobs:
         run: |
           sudo apt update
           sudo apt install -y sbuild buildd qemu-system-misc qemu-user-static binfmt-support \
-                         ca-certificates apt-transport-https devscripts mmdebstrap eatmydata git
+                         ca-certificates apt-transport-https devscripts mmdebstrap eatmydata git build-essential ninja-build
 
       - name: debian-ports fix
         run: |
