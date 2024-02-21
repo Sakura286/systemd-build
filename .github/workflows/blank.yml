@@ -43,8 +43,8 @@ jobs:
 
       - name: debian-ports fix
         run: |
-          wget https://mirror.sjtu.edu.cn/debian/pool/main/d/debian-ports-archive-keyring/debian-ports-archive-keyring_2023.02.01_all.deb
-          sudo dpkg -i ./debian-ports-archive-keyring_2023.02.01_all.deb
+          wget https://mirror.sjtu.edu.cn/debian/pool/main/d/debian-ports-archive-keyring/debian-ports-archive-keyring_2024.02.02_all.deb
+          sudo dpkg -i ./debian-ports-archive-keyring_2024.02.02_all.deb
       - name: install xthead qemu
         run: |
           git clone https://github.com/revyos/qemu --depth=1 && cd qemu
