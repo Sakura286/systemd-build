@@ -70,4 +70,23 @@ jobs:
             --extra-repository="deb [trusted=yes] https://mirror.iscas.ac.cn/revyos/revyos-addons revyos-addons main" \
             sid /srv/chroot/sid-riscv64-revyos-sbuild \
             https://mirror.iscas.ac.cn/revyos/revyos-base
+
+      - name : get source code
+        run: |
+          sudo mkdir -p ~/systemd
+          cd ~/systemd
+          sudo apt install -y devscripts
+          dget https://mirrors.tuna.tsinghua.edu.cn/debian/pool/main/s/systemd/systemd_252.6-1.dsc && cd systemd-252.6
+          sed -e 's/#export\sDEB_BUILD_OPTIONS\s=\snostrip/#export\sDEB_BUILD_OPTIONS\s=\snocheck/' debian/rules
+
+      - name : build systemd
+        run:   sbuild --arch=riscv64 -d sid -c sid-riscv64-revyos-sbuild --no-run-lintian
+
+      - name : upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: systemd
+          path: ~/systemd/*.deb
+          retention-days: 30
+        
           
